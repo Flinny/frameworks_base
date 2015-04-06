@@ -42,11 +42,12 @@ import android.provider.Telephony;
 import android.telephony.PhoneStateListener;
 import android.telephony.ServiceState;
 import android.telephony.SignalStrength;
+import android.telephony.SubscriptionInfo;
 import android.telephony.SubscriptionManager;
 import android.telephony.TelephonyManager;
 import android.text.TextUtils;
 import android.util.Slog;
-import android.util.SparseLongArray;
+import android.util.SparseIntArray;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -106,7 +107,7 @@ public class MSimNetworkControllerImpl extends NetworkControllerImpl {
     String[] mSpn;
     String[] mPlmn;
     int mPhoneCount = 0;
-    private SparseLongArray mPhoneIdSubIdMapping;
+    private SparseIntArray mPhoneIdSubIdMapping;
     ArrayList<MSimSignalCluster> mSimSignalClusters = new ArrayList<MSimSignalCluster>();
     ArrayList<TextView> mSubsLabelViews = new ArrayList<TextView>();
 
@@ -230,7 +231,7 @@ public class MSimNetworkControllerImpl extends NetworkControllerImpl {
         //List<SubInfoRecord> subInfoList = SubscriptionManager.getActivatedSubInfoList(context);
         //if (subInfoList != null) {
             //int subCount = subInfoList.size();
-            mPhoneIdSubIdMapping = new SparseLongArray();
+            mPhoneIdSubIdMapping = new SparseIntArray();
             mPhoneCount = TelephonyManager.getDefault().getPhoneCount();
              Slog.d(TAG, "registerPhoneStateListener: " + mPhoneCount);
             mMSimPhoneStateListener = new PhoneStateListener[mPhoneCount];
@@ -970,9 +971,10 @@ public class MSimNetworkControllerImpl extends NetworkControllerImpl {
             }
         }
         if (mPhoneIdSubIdMapping.indexOfKey(phoneId) >= 0) {
-            long sub = mPhoneIdSubIdMapping.get(phoneId);
-            SubInfoRecord sir = SubscriptionManager.getSubInfoForSubscriber(sub);
-            mMSimNetworkName[phoneId] = sir.displayName;
+            int sub = mPhoneIdSubIdMapping.get(phoneId);
+            SubscriptionInfo info = SubscriptionManager.from(mContext)
+                    .getActiveSubscriptionInfo(sub);
+            mMSimNetworkName[phoneId] = info.getDisplayName().toString();
         } else if (something) {
             mMSimNetworkName[phoneId] = str.toString();
         } else {
